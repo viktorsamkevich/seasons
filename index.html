@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Определение времени года по дате</title>
+<style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+        font-family: 'Segoe UI', Arial, sans-serif;
+        background: linear-gradient(135deg, #74ebd5 0%, #9face6 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .app {
+        background: #ffffff;
+        border-radius: 16px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+        padding: 40px;
+        width: 100%;
+        max-width: 460px;
+    }
+
+    h1 {
+        font-size: 22px;
+        text-align: center;
+        color: #2c3e50;
+        margin-bottom: 24px;
+    }
+
+    .field {
+        margin-bottom: 16px;
+    }
+
+    label {
+        display: block;
+        font-size: 14px;
+        color: #555;
+        margin-bottom: 6px;
+    }
+
+    input, select {
+        width: 100%;
+        padding: 10px 12px;
+        font-size: 16px;
+        border: 2px solid #dfe4ea;
+        border-radius: 8px;
+        outline: none;
+        transition: border-color 0.2s;
+        background: #fff;
+    }
+
+    input:focus, select:focus {
+        border-color: #6c8cff;
+    }
+
+    button {
+        width: 100%;
+        padding: 12px;
+        font-size: 16px;
+        font-weight: 600;
+        color: #fff;
+        background: #6c8cff;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background 0.2s;
+        margin-top: 8px;
+    }
+
+    button:hover {
+        background: #4a6be0;
+    }
+
+    .result {
+        margin-top: 20px;
+        padding: 16px;
+        border-radius: 8px;
+        font-size: 16px;
+        text-align: center;
+        min-height: 24px;
+        transition: all 0.2s;
+    }
+
+    .result.ok {
+        background: #e8f5e9;
+        color: #2e7d32;
+        border: 1px solid #a5d6a7;
+    }
+
+    .result.error {
+        background: #fdecea;
+        color: #c62828;
+        border: 1px solid #ef9a9a;
+    }
+
+    .result.hidden { display: none; }
+
+    .season {
+        font-size: 24px;
+        font-weight: 700;
+        display: block;
+        margin-top: 6px;
+    }
+</style>
+</head>
+<body>
+
+<div class="app">
+    <h1>Определение времени года по дате</h1>
+
+    <div class="field">
+        <label for="day">День (1–31)</label>
+        <input type="number" id="day" min="1" max="31" placeholder="Например, 15">
+    </div>
+
+    <div class="field">
+        <label for="month">Месяц (1–12)</label>
+        <input type="number" id="month" min="1" max="12" placeholder="Например, 7">
+    </div>
+
+    <div class="field">
+        <label for="year">Год (необязательно, для проверки 29 февраля)</label>
+        <input type="number" id="year" min="1" placeholder="Например, 2024">
+    </div>
+
+    <div class="field">
+        <label for="mode">Тип сезонов</label>
+        <select id="mode">
+            <option value="meteorological">Метеорологические (по месяцам)</option>
+            <option value="astronomical">Астрономические (по датам солнцестояний и равноденствий)</option>
+        </select>
+    </div>
+
+    <button onclick="determineSeason()">Определить</button>
+
+    <div id="result" class="result hidden"></div>
+</div>
+
+<script>
+    // Максимальное число дней в месяцах
+    const DAYS_IN_MONTH = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+    // Проверка, является ли год високосным
+    function isLeapYear(year) {
+        return (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
+    }
+
+    // Проверка корректности даты
+    function isValidDate(day, month, year) {
+        if (!Number.isInteger(day) || !Number.isInteger(month)) return false;
+        if (month < 1 || month > 12) return false;
+        if (day < 1) return false;
+
+        let maxDay = DAYS_IN_MONTH[month - 1];
+
+        // Особый случай: февраль
+        if (month === 2 && year) {
+            if (isLeapYear(year)) maxDay = 29;
+        }
+
+        return day <= maxDay;
+    }
+
+    // Метеорологическое определение времени года (Северное полушарие)
+    function getSeasonMeteorological(month) {
+        if (month === 12 || month === 1 || month === 2) return 'Зима';
+        if (month === 3 || month === 4 || month === 5) return 'Весна';
+        if (month === 6 || month === 7 || month === 8) return 'Лето';
+        return 'Осень'; // 9, 10, 11
+    }
+
+    // Астрономическое определение времени года (Северное полушарие, упрощённо)
+    function getSeasonAstronomical(month, day) {
+        // Зима: с 21 декабря по 20 марта (включительно)
+        if ((month === 12 && day >= 21) || month === 1 || month === 2 || (month === 3 && day < 21)) {
+            return 'Зима';
+        }
+        // Весна: с 21 марта по 20 июня
+        if ((month === 3 && day >= 21) || month === 4 || month === 5 || (month === 6 && day < 21)) {
+            return 'Весна';
+        }
+        // Лето: с 21 июня по 22 сентября
+        if ((month === 6 && day >= 21) || month === 7 || month === 8 || (month === 9 && day < 23)) {
+            return 'Лето';
+        }
+        // Осень: с 23 сентября по 20 декабря
+        return 'Осень';
+    }
+
+    // Вывод результата
+    function showResult(text, season, isError) {
+        const resultDiv = document.getElementById('result');
+        resultDiv.classList.remove('hidden', 'ok', 'error');
+        resultDiv.classList.add(isError ? 'error' : 'ok');
+        resultDiv.innerHTML = season
+            ? `${text}<span class="season">${season}</span>`
+            : text;
+    }
+
+    // Главная функция
+    function determineSeason() {
+        const day   = parseInt(document.getElementById('day').value, 10);
+        const month = parseInt(document.getElementById('month').value, 10);
+        const year  = parseInt(document.getElementById('year').value, 10);
+        const mode  = document.getElementById('mode').value;
+
+        // Проверка, что поля заполнены
+        if (isNaN(day) || isNaN(month)) {
+            showResult('Ошибка: введите день и месяц.', null, true);
+            return;
+        }
+
+        // Проверка корректности даты
+        if (!isValidDate(day, month, isNaN(year) ? null : year)) {
+            showResult('Ошибка: такой даты не существует.', null, true);
+            return;
+        }
+
+        // Определение времени года
+        const season = mode === 'astronomical'
+            ? getSeasonAstronomical(month, day)
+            : getSeasonMeteorological(month);
+
+        showResult(
+            `Дата: ${String(day).padStart(2, '0')}.${String(month).padStart(2, '0')} — ${mode === 'astronomical' ? 'астрономический' : 'метеорологический'} сезон:`,
+            season,
+            false
+        );
+    }
+</script>
+
+</body>
+</html>
