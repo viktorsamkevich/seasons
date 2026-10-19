@@ -176,22 +176,13 @@
     }
 
     // Астрономическое определение времени года (Северное полушарие, упрощённо)
-    function getSeasonAstronomical(month, day) {
-        // Зима: с 21 декабря по 20 марта (включительно)
-        if ((month === 12 && day >= 21) || month === 1 || month === 2 || (month === 3 && day < 21)) {
-            return 'Зима';
-        }
-        // Весна: с 21 марта по 20 июня
-        if ((month === 3 && day >= 21) || month === 4 || month === 5 || (month === 6 && day < 21)) {
-            return 'Весна';
-        }
-        // Лето: с 21 июня по 22 сентября
-        if ((month === 6 && day >= 21) || month === 7 || month === 8 || (month === 9 && day < 23)) {
-            return 'Лето';
-        }
-        // Осень: с 23 сентября по 20 декабря
-        return 'Осень';
-    }
+  function getSeasonAstronomical(month, day) {
+    // Астрономические сезоны (упрощённо)
+    if ((month === 12 && day >= 21) || month === 1 || month === 2 || (month === 3 && day < 21)) return 'Зима';
+    if ((month === 3 && day >= 21) || month === 4 || month === 5 || (month === 6 && day < 21)) return 'Весна';
+    if ((month === 6 && day >= 21) || month === 7 || month === 8 || (month === 9 && day < 23)) return 'Лето';
+    return 'Осень'; // 23 сентября — 20 декабря
+}
 
     // Вывод результата
     function showResult(text, season, isError) {
